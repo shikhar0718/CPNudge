@@ -2,14 +2,13 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "target":"es2022",
+    "target": "es2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
 
     "rootDir": "./src",
     "outDir": "./dist",
-    
-  
+
     "types": ["node"],
 
     // Other Outputs
@@ -31,7 +30,7 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
+    "moduleDetection": "force"
   },
 
   "include": ["src"]

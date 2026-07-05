@@ -1,0 +1,24 @@
+{
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "lint:backend": "npm --prefix backend run lint",
+    "format:backend": "npm --prefix backend run format",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "format:frontend": "npm --prefix frontend run format"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8"
+  },
+  "lint-staged": {
+    "backend/**/*.{ts,js}": [
+      "npm run lint:backend",
+      "npm run format:backend"
+    ],
+    "frontend/**/*.{ts,tsx,js,jsx}": [
+      "npm run lint:frontend",
+      "npm run format:frontend"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+out
+
+# Production build
+build
+
+# Coverage
+coverage
+
+# Lock files
+package-lock.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel
