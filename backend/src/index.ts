@@ -1,14 +1,4 @@
-import express from "express";
-import type { Request, Response } from "express";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const app = express();
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Backend is running");
-});
+import app from "./app.js";
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

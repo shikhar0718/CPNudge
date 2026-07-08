@@ -6,7 +6,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
 
-    "rootDir": "./src",
+    "rootDir": "./",
     "outDir": "./dist",
 
     "types": ["node"],
@@ -33,5 +33,5 @@
     "moduleDetection": "force"
   },
 
-  "include": ["src"]
+  "include": ["src", "generated"]
 }
