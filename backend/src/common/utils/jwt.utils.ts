@@ -1,16 +1,19 @@
-import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import type { SignOptions } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const generateAccessToken = (payload: object) => {
   return jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET!, {
-    expiresIn: (process.env.JWT_ACCESS_TOKEN_EXPIRES_IN || "15m") as unknown,
+    expiresIn: (process.env.JWT_ACCESS_TOKEN_EXPIRES_IN ?? "15m") as SignOptions["expiresIn"] &
+      (string | number),
     algorithm: "HS512",
   });
 };
 
 const generateRefreshToken = (payload: object) => {
   return jwt.sign(payload, process.env.JWT_REFRESH_TOKEN_SECRET!, {
-    expiresIn: (process.env.JWT_REFRESH_TOKEN_EXPIRES_IN || "24h") as unknown,
+    expiresIn: (process.env.JWT_REFRESH_TOKEN_EXPIRES_IN ?? "24h") as SignOptions["expiresIn"] &
+      (string | number),
     algorithm: "HS512",
   });
 };
