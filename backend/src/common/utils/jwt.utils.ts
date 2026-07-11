@@ -34,10 +34,33 @@ const generateResetToken = () => {
   return { rawToken, hashedToken };
 };
 
+const parseExpiresInToSeconds = (expiresIn: string | number): number => {
+  if (typeof expiresIn === "number") return expiresIn;
+  const match = expiresIn.trim().match(/^(\d+)(s|m|h|d)$/);
+  if (!match) return 900; // default to 15m (900 seconds)
+  const valStr = match[1];
+  const unit = match[2];
+  if (!valStr || !unit) return 900;
+  const value = parseInt(valStr, 10);
+  switch (unit) {
+    case "s":
+      return value;
+    case "m":
+      return value * 60;
+    case "h":
+      return value * 60 * 60;
+    case "d":
+      return value * 24 * 60 * 60;
+    default:
+      return 900;
+  }
+};
+
 export {
   generateResetToken,
   generateAccessToken,
   generateRefreshToken,
   verifyAccessToken,
   verifyRefreshToken,
+  parseExpiresInToSeconds,
 };

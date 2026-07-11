@@ -28,6 +28,7 @@
     "morgan": "^1.11.0",
     "nodemailer": "^9.0.3",
     "pg": "^8.22.0",
+    "ua-parser-js": "^2.0.10",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -39,6 +40,7 @@
     "@types/node": "^26.0.1",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.20.0",
+    "@types/ua-parser-js": "^0.7.39",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.7.0",
