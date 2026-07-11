@@ -44,7 +44,12 @@ export const Register = async (req: Request, res: Response, next: NextFunction) 
 };
 export const Login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await authService.login(req.body);
+    const requestMetadata = {
+      userAgent: req.get("user-agent") ?? "Unknown",
+      ipAddress: req.ip ?? "Unknown",
+    };
+
+    const result = await authService.login(req.body, requestMetadata);
     APIResponse.ok(res, "Login successful.", result);
   } catch (e) {
     next(e);

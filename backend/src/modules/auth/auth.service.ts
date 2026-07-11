@@ -19,6 +19,14 @@ import {
   verifyUserEmail,
 } from "./auth.repository.js";
 
+import { createSession } from "../session/index.js";
+import { parseUserAgent } from "../../common/utils/index.js";
+
+type RequestMetadata = {
+  userAgent: string;
+  ipAddress: string;
+};
+
 const hashToken = (token: string) => {
   return crypto.createHash("sha256").update(token).digest("hex");
 };
@@ -53,7 +61,7 @@ const register = async ({ firstName, lastName, username, email, password }: Regi
   };
 };
 
-const login = async ({ email, password }: LoginDto) => {
+const login = async ({ email, password }: LoginDto, requestMetadata: RequestMetadata) => {
   const user = await findUserByEmail(email);
   if (!user) {
     throw APIError.unauthorized("Invalid email");
@@ -75,6 +83,21 @@ const login = async ({ email, password }: LoginDto) => {
     email: user.email,
     username: user.username,
   };
+
+  const { deviceInfo, browser, operatingSystem } = parseUserAgent(requestMetadata.userAgent);
+
+  const sessionExpiresAt = new Date();
+  sessionExpiresAt.setDate(sessionExpiresAt.getDate() + 7);
+
+  const session = await createSession({
+    userId: user.id,
+    deviceInfo,
+    browser,
+    operatingSystem,
+    userAgent: requestMetadata.userAgent,
+    ipAddress: requestMetadata.ipAddress,
+    expiresAt: sessionExpiresAt,
+  });
 
   const accessToken = generateAccessToken(payload);
   const expiresIn = parseExpiresInToSeconds(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN ?? "15m");
