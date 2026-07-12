@@ -3,6 +3,7 @@ export interface CodeChefContest {
   contest_name: string;
   contest_start_date_iso: string;
   contest_end_date_iso: string;
+  contest_duration: string;
 }
 
 export interface CodeChefResponse {

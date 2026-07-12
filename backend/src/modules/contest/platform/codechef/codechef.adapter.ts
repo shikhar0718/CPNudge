@@ -43,11 +43,13 @@ export class CodeChefAdapter implements ContestProvider {
           throw new Error("Invalid contest date");
         }
 
-        const durationSeconds = (endTime.getTime() - startTime.getTime()) / 1000;
+        const durationMinutes = Number(contest.contest_duration);
 
-        if (durationSeconds <= 0) {
+        if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
           throw new Error("Invalid contest duration");
         }
+
+        const duration = durationMinutes * 60;
 
         const contestTypeMatch = contest.contest_code.match(/^[A-Za-z]+/);
 
@@ -59,7 +61,7 @@ export class CodeChefAdapter implements ContestProvider {
           url: `https://www.codechef.com/${contest.contest_code}`,
           startTime,
           endTime,
-          duration: durationSeconds,
+          duration,
           registrationOpen: null,
           contestType: contestTypeMatch?.[0] ?? null,
           status: ContestStatus.UPCOMING,
