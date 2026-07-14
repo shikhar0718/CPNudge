@@ -1,43 +1,39 @@
-import { ContestStatus, type ContestPlatform } from "../../../generated/prisma/client.js";
-import { prisma } from "../../common/database/index.js";
+import { prisma } from "../../common/database/prisma.js";
 import type { NormalizedContest } from "./contest.types.js";
 
-export const findContestByPlatformId = async (platform: ContestPlatform, contestId: string) => {
-  return prisma.contest.findUnique({
+function toContestPersistenceData(contest: NormalizedContest) {
+  return {
+    platform: contest.platform,
+    contestId: contest.contestId,
+    title: contest.title,
+    slug: contest.slug,
+    url: contest.url,
+    startTime: contest.startTime,
+    endTime: contest.endTime,
+    duration: contest.duration,
+    registrationOpen: contest.registrationOpen,
+    contestType: contest.contestType,
+    status: contest.status,
+  };
+}
+
+export async function upsertContest(contest: NormalizedContest) {
+  const contestData = toContestPersistenceData(contest);
+
+  return prisma.contest.upsert({
     where: {
       platform_contestId: {
-        platform,
-        contestId,
+        platform: contest.platform,
+        contestId: contest.contestId,
       },
     },
+    create: contestData,
+    update: contestData,
   });
-};
+}
 
-export const createContest = async (data: NormalizedContest) => {
-  return prisma.contest.create({
-    data,
-  });
-};
-
-export const updateContest = async (data: NormalizedContest) => {
-  return prisma.contest.update({
-    where: {
-      platform_contestId: {
-        platform: data.platform,
-        contestId: data.contestId,
-      },
-    },
-    data,
-  });
-};
-
-export const getUpcomingContests = async () => {
-  return prisma.contest.findMany({
-    where: {
-      status: ContestStatus.UPCOMING,
-    },
-    orderBy: {
-      startTime: "asc",
-    },
-  });
-};
+export async function upsertManyContests(contests: NormalizedContest[]) {
+  for (const contest of contests) {
+    await upsertContest(contest);
+  }
+}
