@@ -1,5 +1,6 @@
 import { prisma } from "../../common/database/prisma.js";
 import type { NormalizedContest } from "./contest.types.js";
+import { ContestStatus } from "../../../generated/prisma/enums.js";
 
 function toContestPersistenceData(contest: NormalizedContest) {
   return {
@@ -36,4 +37,26 @@ export async function upsertManyContests(contests: NormalizedContest[]) {
   for (const contest of contests) {
     await upsertContest(contest);
   }
+}
+
+export async function findUpcoming(limit?: number) {
+  return prisma.contest.findMany({
+    where: {
+      status: ContestStatus.UPCOMING,
+    },
+    orderBy: {
+      startTime: "asc",
+    },
+    ...(limit && {
+      take: limit,
+    }),
+  });
+}
+
+export async function findById(id: string) {
+  return prisma.contest.findUnique({
+    where: {
+      id: id,
+    },
+  });
 }

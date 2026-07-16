@@ -1,2 +1,2 @@
 export * from "./scheduler.service.js";
-export * from "./contestSync.job.js";
+export * from "./contest-sync.job.js";
