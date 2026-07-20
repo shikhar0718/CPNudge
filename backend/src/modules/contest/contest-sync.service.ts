@@ -1,8 +1,8 @@
 import type { ContestProvider } from "./providers/contest.provider.js";
-import { LeetcodeAdapter } from "./platform/leetcode/leetcode.adapter.js";
-import { AtCoderAdapter } from "./platform/atcoder/atcoder.adapter.js";
-import { CodeChefAdapter } from "./platform/codechef/codechef.adapter.js";
-import { CodeforcesAdapter } from "./platform/codeforces/codeforces.adapter.js";
+import { LeetcodeAdapter } from "./platforms/leetcode/leetcode.adapter.js";
+import { AtCoderAdapter } from "./platforms/atcoder/atcoder.adapter.js";
+import { CodeChefAdapter } from "./platforms/codechef/codechef.adapter.js";
+import { CodeforcesAdapter } from "./platforms/codeforces/codeforces.adapter.js";
 import type { NormalizedContest } from "./contest.types.js";
 import { upsertManyContests } from "./contest.repository.js";
 import type { ContestSyncSummary, ProviderSyncResult } from "./contest-sync.types.js";
