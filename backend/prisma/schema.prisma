@@ -30,6 +30,7 @@ model User {
   sessions                Session[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
+  linkedPlatformAccounts  LinkedPlatformAccount[]
 }
 
 model Session {
@@ -37,14 +38,14 @@ model Session {
 
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  deviceInfo     String
-  browser        String
-  operatingSystem String
-  userAgent String
-  ipAddress String
 
-  loginAt       DateTime @default(now())
+  deviceInfo      String
+  browser         String
+  operatingSystem String
+  userAgent       String
+  ipAddress       String
+
+  loginAt        DateTime @default(now())
   lastActivityAt DateTime @default(now())
   expiresAt      DateTime
 
@@ -95,8 +96,38 @@ model PasswordResetToken {
   usedAt    DateTime?
 }
 
+model Contest {
+  id               String          @id @default(uuid()) @db.Uuid
+  platform         ContestPlatform
+  contestId        String
+  title            String
+  slug             String?
+  url              String
+  startTime        DateTime
+  endTime          DateTime
+  duration         Int
+  registrationOpen Boolean?
+  contestType      String?
+  status           ContestStatus
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
+  @@unique([platform, contestId])
+  @@index([status, startTime])
+}
 
+model LinkedPlatformAccount {
+  id       String          @id @default(uuid()) @db.Uuid
+  userId   String          @db.Uuid
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username String
+  platform ContestPlatform
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, platform])
+}
 
 enum ContestPlatform {
   LEETCODE
@@ -110,26 +141,4 @@ enum ContestStatus {
   ONGOING
   FINISHED
   CANCELLED
-}
-
-
-model Contest{
-  id                   String @id @default(uuid())  @db.Uuid
-  platform             ContestPlatform
-  contestId            String
-  title                String
-  slug                 String?
-  url                  String
-  startTime            DateTime
-  endTime              DateTime
-  duration             Int
-  registrationOpen     Boolean?
-  contestType          String?
-  status               ContestStatus
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
-
-   @@unique([platform, contestId])
-   @@index([status, startTime])
-
 }
