@@ -114,3 +114,23 @@ export const LogoutAll = async (req: Request, res: Response, next: NextFunction)
     next(e);
   }
 };
+
+export const ForgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email } = req.body;
+    const result = await authService.forgotPassword(email);
+    APIResponse.ok(res, result.message);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const ResetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+    await authService.resetPassword({ token, password, confirmPassword });
+    APIResponse.ok(res, "Password reset successfully. You can now log in with your new password.");
+  } catch (e) {
+    next(e);
+  }
+};

@@ -8,6 +8,7 @@ import {
 } from "../../common/utils/token.utils.js";
 import type { RegisterDto } from "./dto/register.dto.js";
 import type { LoginDto } from "./dto/login.dto.js";
+import type { ResetPasswordDto } from "./dto/reset-password.dto.js";
 import {
   findUserByEmail,
   findUserByUsername,
@@ -16,6 +17,7 @@ import {
   findVerificationTokenByHash,
   deleteVerificationToken,
   verifyUserEmail,
+  updateUserPassword,
 } from "./auth.repository.js";
 
 import {
@@ -28,8 +30,18 @@ import {
   revokeRefreshToken,
 } from "../session/index.js";
 
+import {
+  deletePasswordResetTokensByUserId,
+  createPasswordResetToken,
+  findPasswordResetTokenByHash,
+  deletePasswordResetToken,
+} from "./password-reset.repository.js";
+
 import { parseUserAgent } from "../../common/utils/index.js";
 import { logger } from "../../common/shared/logger.js";
+import { env } from "../../common/config/env.js";
+import { emailService } from "../email/index.js";
+import { prisma } from "../../common/database/prisma.js";
 
 type RequestMetadata = {
   userAgent: string;
@@ -244,4 +256,92 @@ const verifyEmailToken = async (rawToken: string) => {
   await deleteVerificationToken(token.id);
 };
 
-export { register, login, refresh, logout, logoutAll, verifyEmailToken, deleteUserById };
+const forgotPassword = async (email: string) => {
+  const user = await findUserByEmail(email);
+
+  if (!user) {
+    return {
+      message: "If an account exists, a password reset link has been sent.",
+    };
+  }
+
+  // 1. Enforce single active token per user
+  await deletePasswordResetTokensByUserId(user.id);
+
+  // 2. Generate secure token
+  const { rawToken, tokenHash } = generateSecureToken();
+  const expirySeconds = parseExpiresInToSeconds(env.PASSWORD_RESET_TOKEN_EXPIRES_IN);
+  const expiresAt = new Date(Date.now() + expirySeconds * 1000);
+
+  // 3. Store reset token hash
+  const tokenRecord = await createPasswordResetToken({
+    userId: user.id,
+    tokenHash,
+    expiresAt,
+  });
+
+  // 4. Try sending reset email
+  try {
+    const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+    await emailService.sendPasswordResetEmail({
+      to: user.email,
+      firstName: user.firstName,
+      resetUrl,
+      expiresInMinutes: Math.round(expirySeconds / 60),
+    });
+  } catch (error) {
+    // Rollback token on email sending failure
+    await deletePasswordResetToken(tokenRecord.id);
+    logger.error("Failed to send password reset email:", error);
+    throw APIError.internal("Unable to process your request. Please try again later.");
+  }
+
+  return {
+    message: "If an account exists, a password reset link has been sent.",
+  };
+};
+
+const resetPassword = async ({ token, password }: ResetPasswordDto) => {
+  const tokenHash = hashToken(token);
+  const record = await findPasswordResetTokenByHash(tokenHash);
+
+  if (!record) {
+    throw APIError.unauthorized("Invalid or expired reset token");
+  }
+
+  if (new Date() > record.expiresAt) {
+    throw APIError.unauthorized("Invalid or expired reset token");
+  }
+
+  // Optional variance check: New password must be different from current
+  const same = await argon.verify(record.user.passwordHash, password);
+  if (same) {
+    throw APIError.badRequest("New password must be different from the current password.");
+  }
+
+  const passwordHash = await argon.hash(password);
+
+  // Atomic database transaction block
+  await prisma.$transaction(async (tx) => {
+    // 1. Update user password hash
+    await updateUserPassword(record.userId, passwordHash, tx);
+
+    // 2. Cascade delete all sessions (automatically invalidating refresh tokens)
+    await deleteAllSessionsByUserId(record.userId, tx);
+
+    // 3. Delete the used password reset token
+    await deletePasswordResetToken(record.id, tx);
+  });
+};
+
+export {
+  register,
+  login,
+  refresh,
+  logout,
+  logoutAll,
+  verifyEmailToken,
+  forgotPassword,
+  resetPassword,
+  deleteUserById,
+};

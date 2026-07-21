@@ -1,4 +1,5 @@
 import { prisma } from "../../common/database/prisma.js";
+import { Prisma } from "../../../generated/prisma/client.js";
 
 type CreateSessionData = {
   userId: string;
@@ -35,8 +36,9 @@ export const deleteSession = async (id: string) => {
   });
 };
 
-export const deleteAllSessionsByUserId = async (userId: string) => {
-  return prisma.session.deleteMany({
+export const deleteAllSessionsByUserId = async (userId: string, tx?: Prisma.TransactionClient) => {
+  const client = tx ?? prisma;
+  return client.session.deleteMany({
     where: { userId },
   });
 };

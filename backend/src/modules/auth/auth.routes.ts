@@ -4,6 +4,8 @@ import validateDto from "../../common/middleware/dto.validator.js";
 import { registerSchema } from "./dto/register.dto.js";
 import { loginSchema } from "./dto/login.dto.js";
 import { refreshSchema } from "./dto/refresh.dto.js";
+import { forgotPasswordSchema } from "./dto/forgot-password.dto.js";
+import { resetPasswordSchema } from "./dto/reset-password.dto.js";
 import { authMiddleware } from "./auth.middleware.js";
 
 const authRouter = Router();
@@ -16,5 +18,8 @@ authRouter.get("/me", authMiddleware, controller.GetMe);
 authRouter.post("/refresh", validateDto(refreshSchema), controller.Refresh);
 authRouter.post("/logout", validateDto(refreshSchema), controller.Logout);
 authRouter.post("/logout-all", authMiddleware, controller.LogoutAll);
+
+authRouter.post("/forgot-password", validateDto(forgotPasswordSchema), controller.ForgotPassword);
+authRouter.post("/reset-password", validateDto(resetPasswordSchema), controller.ResetPassword);
 
 export { authRouter };

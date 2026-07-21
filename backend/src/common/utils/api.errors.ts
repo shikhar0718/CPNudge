@@ -34,6 +34,10 @@ export class APIError extends Error {
   static notFound(message = "Resource not found") {
     return new APIError(message, 404);
   }
+
+  static internal(message = "Internal Server Error") {
+    return new APIError(message, 500);
+  }
 }
 
 export default APIError;

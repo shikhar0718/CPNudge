@@ -1,4 +1,5 @@
 import { prisma } from "../../common/database/index.js";
+import { Prisma } from "../../../generated/prisma/client.js";
 
 export const findUserByEmail = async (email: string) => {
   return prisma.user.findUnique({
@@ -73,5 +74,17 @@ export const verifyUserEmail = async (userId: string) => {
   return prisma.user.update({
     where: { id: userId },
     data: { emailVerified: true },
+  });
+};
+
+export const updateUserPassword = async (
+  userId: string,
+  passwordHash: string,
+  tx?: Prisma.TransactionClient
+) => {
+  const client = tx ?? prisma;
+  return client.user.update({
+    where: { id: userId },
+    data: { passwordHash },
   });
 };
