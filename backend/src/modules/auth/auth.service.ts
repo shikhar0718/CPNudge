@@ -1,11 +1,11 @@
 import argon from "argon2";
 import APIError from "../../common/utils/api.errors.js";
+import { generateAccessToken, parseExpiresInToSeconds } from "../../common/utils/jwt.utils.js";
 import {
-  generateAccessToken,
-  generateResetToken,
-  parseExpiresInToSeconds,
-} from "../../common/utils/jwt.utils.js";
-import { generateRefreshToken, hashToken } from "../../common/utils/token.utils.js";
+  generateRefreshToken,
+  hashToken,
+  generateSecureToken,
+} from "../../common/utils/token.utils.js";
 import type { RegisterDto } from "./dto/register.dto.js";
 import type { LoginDto } from "./dto/login.dto.js";
 import {
@@ -58,7 +58,7 @@ const register = async ({ firstName, lastName, username, email, password }: Regi
 
   const hashedPassword = await argon.hash(password);
 
-  const { rawToken, hashedToken } = generateResetToken();
+  const { rawToken, tokenHash } = generateSecureToken();
 
   const user = await createUserWithVerificationToken({
     username,
@@ -66,7 +66,7 @@ const register = async ({ firstName, lastName, username, email, password }: Regi
     passwordHash: hashedPassword,
     firstName,
     lastName,
-    hashedToken,
+    hashedToken: tokenHash,
   });
 
   return {

@@ -1,5 +1,6 @@
 import { transporter } from "./email.provider.js";
 import { verificationEmailTemplate } from "./templates/verification.template.js";
+import { passwordResetEmailTemplate } from "./templates/password-reset.template.js";
 
 interface SendMailOptions {
   to: string;
@@ -42,4 +43,30 @@ const sendVerificationEmail = async ({
   });
 };
 
-export { sendMail, sendVerificationEmail };
+interface SendPasswordResetEmailOptions {
+  to: string;
+  firstName: string;
+  resetUrl: string;
+  expiresInMinutes?: number;
+}
+
+const sendPasswordResetEmail = async ({
+  to,
+  firstName,
+  resetUrl,
+  expiresInMinutes = 60,
+}: SendPasswordResetEmailOptions) => {
+  const html = passwordResetEmailTemplate({
+    firstName,
+    resetUrl,
+    expiresInMinutes,
+  });
+
+  return sendMail({
+    to,
+    subject: "Reset your password — CPNudge",
+    html,
+  });
+};
+
+export { sendMail, sendVerificationEmail, sendPasswordResetEmail };

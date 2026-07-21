@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { passwordValidation } from "./password.schema.js";
+
 export const registerSchema = z
   .object({
     firstName: z
@@ -35,22 +37,7 @@ export const registerSchema = z
 
     email: z.email("Please enter a valid email address.").trim().lowercase(),
 
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters long.")
-      .max(128, "Password cannot exceed 128 characters.")
-      .refine((password) => /[A-Z]/.test(password), {
-        message: "Password must contain at least one uppercase letter.",
-      })
-      .refine((password) => /[a-z]/.test(password), {
-        message: "Password must contain at least one lowercase letter.",
-      })
-      .refine((password) => /\d/.test(password), {
-        message: "Password must contain at least one number.",
-      })
-      .refine((password) => /[!@#$%^&*(),.?":{}|<>]/.test(password), {
-        message: "Password must contain at least one special character.",
-      }),
+    password: passwordValidation,
 
     confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters long."),
   })

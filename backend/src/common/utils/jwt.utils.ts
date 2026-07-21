@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import type { SignOptions } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 
@@ -26,14 +25,6 @@ const verifyRefreshToken = (token: string) => {
   return jwt.verify(token, process.env.JWT_REFRESH_TOKEN_SECRET!);
 };
 
-const generateResetToken = () => {
-  const rawToken = crypto.randomBytes(32).toString("hex");
-
-  const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
-
-  return { rawToken, hashedToken };
-};
-
 const parseExpiresInToSeconds = (expiresIn: string | number): number => {
   if (typeof expiresIn === "number") return expiresIn;
   const match = expiresIn.trim().match(/^(\d+)(s|m|h|d)$/);
@@ -57,7 +48,6 @@ const parseExpiresInToSeconds = (expiresIn: string | number): number => {
 };
 
 export {
-  generateResetToken,
   generateAccessToken,
   generateRefreshToken,
   verifyAccessToken,
