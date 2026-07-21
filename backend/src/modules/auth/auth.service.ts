@@ -1,12 +1,11 @@
-import crypto from "crypto";
 import argon from "argon2";
-import { Prisma } from "../../../generated/prisma/client.js";
 import APIError from "../../common/utils/api.erros.js";
 import {
   generateAccessToken,
   generateResetToken,
   parseExpiresInToSeconds,
 } from "../../common/utils/jwt.utils.js";
+import { generateRefreshToken, hashToken } from "../../common/utils/token.utils.js";
 import type { RegisterDto } from "./dto/register.dto.js";
 import type { LoginDto } from "./dto/login.dto.js";
 import {
@@ -19,16 +18,31 @@ import {
   verifyUserEmail,
 } from "./auth.repository.js";
 
-import { createSession } from "../session/index.js";
+import {
+  createSession,
+  deleteSession,
+  deleteAllSessionsByUserId,
+  updateLastActivity,
+  createRefreshToken,
+  findRefreshTokenByHash,
+  revokeRefreshToken,
+} from "../session/index.js";
+
 import { parseUserAgent } from "../../common/utils/index.js";
+import { logger } from "../../common/shared/logger.js";
 
 type RequestMetadata = {
   userAgent: string;
   ipAddress: string;
 };
 
-const hashToken = (token: string) => {
-  return crypto.createHash("sha256").update(token).digest("hex");
+const calculateExpiry = (rememberMe: boolean): Date => {
+  const expiresInStr = rememberMe
+    ? (process.env.REFRESH_TOKEN_REMEMBER_ME_EXPIRES_IN ?? "30d")
+    : (process.env.REFRESH_TOKEN_EXPIRES_IN ?? "1d");
+
+  const seconds = parseExpiresInToSeconds(expiresInStr);
+  return new Date(Date.now() + seconds * 1000);
 };
 
 const register = async ({ firstName, lastName, username, email, password }: RegisterDto) => {
@@ -61,7 +75,10 @@ const register = async ({ firstName, lastName, username, email, password }: Regi
   };
 };
 
-const login = async ({ email, password }: LoginDto, requestMetadata: RequestMetadata) => {
+const login = async (
+  { email, password, rememberMe }: LoginDto,
+  requestMetadata: RequestMetadata
+) => {
   const user = await findUserByEmail(email);
   if (!user) {
     throw APIError.unauthorized("Invalid email");
@@ -78,16 +95,10 @@ const login = async ({ email, password }: LoginDto, requestMetadata: RequestMeta
     throw APIError.unauthorized("Incorrect password");
   }
 
-  const payload = {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-  };
-
   const { deviceInfo, browser, operatingSystem } = parseUserAgent(requestMetadata.userAgent);
 
-  const sessionExpiresAt = new Date();
-  sessionExpiresAt.setDate(sessionExpiresAt.getDate() + 7);
+  // Single source of truth for expiry
+  const expiry = calculateExpiry(rememberMe);
 
   const session = await createSession({
     userId: user.id,
@@ -96,16 +107,114 @@ const login = async ({ email, password }: LoginDto, requestMetadata: RequestMeta
     operatingSystem,
     userAgent: requestMetadata.userAgent,
     ipAddress: requestMetadata.ipAddress,
-    expiresAt: sessionExpiresAt,
+    expiresAt: expiry,
   });
+
+  // Generate refresh token — store only the hash
+  const rawRefreshToken = generateRefreshToken();
+  await createRefreshToken({
+    sessionId: session.id,
+    tokenHash: hashToken(rawRefreshToken),
+    expiresAt: expiry,
+  });
+
+  // Access token carries sessionId
+  const payload = {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    sessionId: session.id,
+  };
 
   const accessToken = generateAccessToken(payload);
   const expiresIn = parseExpiresInToSeconds(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN ?? "15m");
 
   return {
     accessToken,
+    refreshToken: rawRefreshToken,
     expiresIn,
   };
+};
+
+const refresh = async (incomingToken: string) => {
+  const tokenHash = hashToken(incomingToken);
+  const record = await findRefreshTokenByHash(tokenHash);
+
+  if (!record) {
+    throw APIError.unauthorized("Invalid refresh token");
+  }
+
+  if (record.isRevoked) {
+    throw APIError.unauthorized("Refresh token has been revoked");
+  }
+
+  if (new Date() > record.expiresAt) {
+    throw APIError.unauthorized("Refresh token has expired");
+  }
+
+  const { session } = record;
+
+  if (new Date() > session.expiresAt) {
+    throw APIError.unauthorized("Session has expired");
+  }
+
+  // Rotate: revoke old token
+  await revokeRefreshToken(record.id);
+
+  // Generate new refresh token with same expiry
+  const rawRefreshToken = generateRefreshToken();
+  await createRefreshToken({
+    sessionId: session.id,
+    tokenHash: hashToken(rawRefreshToken),
+    expiresAt: record.expiresAt,
+  });
+
+  // Fire-and-forget lastActivity update
+  void updateLastActivity(session.id).catch((err) => {
+    logger.warn("Failed to update session activity", err);
+  });
+
+  // New access token
+  const { user } = session;
+  const payload = {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    sessionId: session.id,
+  };
+
+  const accessToken = generateAccessToken(payload);
+  const expiresIn = parseExpiresInToSeconds(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN ?? "15m");
+
+  return {
+    accessToken,
+    refreshToken: rawRefreshToken,
+    expiresIn,
+  };
+};
+
+const logout = async (incomingToken: string) => {
+  const tokenHash = hashToken(incomingToken);
+  const record = await findRefreshTokenByHash(tokenHash);
+
+  if (!record) {
+    throw APIError.unauthorized("Invalid refresh token");
+  }
+
+  if (record.isRevoked) {
+    throw APIError.unauthorized("Refresh token has been revoked");
+  }
+
+  if (new Date() > record.expiresAt) {
+    throw APIError.unauthorized("Refresh token has expired");
+  }
+
+  // Delete session — cascade deletes all refresh tokens
+  await deleteSession(record.sessionId);
+};
+
+const logoutAll = async (userId: string) => {
+  await deleteAllSessionsByUserId(userId);
 };
 
 const verifyEmailToken = async (rawToken: string) => {
@@ -135,4 +244,4 @@ const verifyEmailToken = async (rawToken: string) => {
   await deleteVerificationToken(token.id);
 };
 
-export { register, login, verifyEmailToken, deleteUserById };
+export { register, login, refresh, logout, logoutAll, verifyEmailToken, deleteUserById };

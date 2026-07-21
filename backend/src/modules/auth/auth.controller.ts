@@ -84,3 +84,33 @@ export const GetMe = async (req: Request, res: Response, next: NextFunction) => 
     next(e);
   }
 };
+
+export const Refresh = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { refreshToken } = req.body;
+    const result = await authService.refresh(refreshToken);
+    APIResponse.ok(res, "Token refreshed successfully.", result);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const Logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { refreshToken } = req.body;
+    await authService.logout(refreshToken);
+    APIResponse.ok(res, "Logged out successfully.");
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const LogoutAll = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    await authService.logoutAll(authReq.user.id);
+    APIResponse.ok(res, "Logged out from all devices successfully.");
+  } catch (e) {
+    next(e);
+  }
+};

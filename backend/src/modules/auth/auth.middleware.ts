@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import APIError from "../../common/utils/api.erros.js";
 import { verifyAccessToken } from "../../common/utils/jwt.utils.js";
 import type { AuthenticatedRequest, AuthPayload } from "./auth.types.js";
+import { updateLastActivity } from "../session/index.js";
+import { logger } from "../../common/shared/logger.js";
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -27,7 +29,13 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
       id: payload.id,
       email: payload.email,
       username: payload.username,
+      sessionId: payload.sessionId,
     };
+
+    // Fire-and-forget activity update
+    void updateLastActivity(payload.sessionId).catch((err) => {
+      logger.warn("Failed to update session activity", err);
+    });
 
     next();
   } catch (error) {

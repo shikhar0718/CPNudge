@@ -15,3 +15,28 @@ export const createSession = async (data: CreateSessionData) => {
     data,
   });
 };
+
+export const findSessionById = async (id: string) => {
+  return prisma.session.findUnique({
+    where: { id },
+  });
+};
+
+export const updateLastActivity = async (id: string) => {
+  return prisma.session.update({
+    where: { id },
+    data: { lastActivityAt: new Date() },
+  });
+};
+
+export const deleteSession = async (id: string) => {
+  return prisma.session.delete({
+    where: { id },
+  });
+};
+
+export const deleteAllSessionsByUserId = async (userId: string) => {
+  return prisma.session.deleteMany({
+    where: { userId },
+  });
+};
