@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { APIError } from "../utils/api.erros.js";
+import { APIError } from "../utils/api.errors.js";
 
 export function errorHandlerMiddleware(
   err: Error & { statusCode?: number; status?: string; isOperational?: boolean },

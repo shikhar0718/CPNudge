@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import APIError from "../../common/utils/api.erros.js";
+import APIError from "../../common/utils/api.errors.js";
 import { verifyAccessToken } from "../../common/utils/jwt.utils.js";
 import type { AuthenticatedRequest, AuthPayload } from "./auth.types.js";
 import { updateLastActivity } from "../session/index.js";

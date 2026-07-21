@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 
 import APIResponse from "../../common/utils/api.response.js";
-import APIError from "../../common/utils/api.erros.js";
+import APIError from "../../common/utils/api.errors.js";
 import { authService } from "./index.js";
 import { emailService } from "../email/index.js";
 import type { AuthenticatedRequest } from "./auth.types.js";

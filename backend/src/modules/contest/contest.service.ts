@@ -2,7 +2,7 @@ import { findUpcoming, findById, findContests } from "./contest.repository.js";
 import { ContestSyncService } from "./contest-sync.service.js";
 import type { ContestQueryDto } from "./dto/contest-query.dto.js";
 
-import APIError from "../../common/utils/api.erros.js";
+import APIError from "../../common/utils/api.errors.js";
 
 export class ContestService {
   private readonly contestSyncService = new ContestSyncService();

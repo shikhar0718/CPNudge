@@ -1,5 +1,5 @@
 import argon from "argon2";
-import APIError from "../../common/utils/api.erros.js";
+import APIError from "../../common/utils/api.errors.js";
 import {
   generateAccessToken,
   generateResetToken,

@@ -4,7 +4,7 @@ import { CodeforcesProfileProvider } from "../providers/codeforces.provider.js";
 import { LeetcodeProfileProvider } from "../providers/leetcoder.provider.js";
 import { CodechefProfileProvider } from "../providers/codechef.provider.js";
 import { AtcoderProfileProvider } from "../providers/atcoder.provider.js";
-import APIError from "../../../common/utils/api.erros.js";
+import APIError from "../../../common/utils/api.errors.js";
 
 export class ProfileVerificationService {
   private readonly providers: ProfileProvider[];
