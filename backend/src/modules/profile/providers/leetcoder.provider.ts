@@ -2,7 +2,7 @@ import { ContestPlatform } from "../../../../generated/prisma/enums.js";
 import type { ProfileProvider } from "./profile-provider.interface.js";
 
 const QUERY = `
-query VerifyUser($username: String!) {
+query VerifyUser($username: String!) {   
   matchedUser(username: $username) {
     username
   }
