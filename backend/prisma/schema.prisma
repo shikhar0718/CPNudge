@@ -27,10 +27,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sessions                Session[]
-  emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens     PasswordResetToken[]
-  linkedPlatformAccounts  LinkedPlatformAccount[]
+  sessions                                 Session[]
+  emailVerificationTokens                  EmailVerificationToken[]
+  passwordResetTokens                      PasswordResetToken[]
+  linkedPlatformAccounts                   LinkedPlatformAccount[]
+  submissionActivity                       SubmissionActivity[]
+  contestParticipationActivity             ContestParticipationActivity[]
 }
 
 model Session {
@@ -123,10 +125,57 @@ model LinkedPlatformAccount {
   username String
   platform ContestPlatform
 
+    // Activity Metadata
+  lastSubmissionActivityDate  DateTime?
+  lastContestParticipationDate DateTime?
+
+    // Operational Metadata
+  lastSuccessfulSyncAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, platform])
+}
+
+model SubmissionActivity{
+  id                        String        @id @default(uuid())  @db.Uuid
+  userId                    String        @db.Uuid
+  user                      User          @relation(fields: [userId], references:[id], onDelete: Cascade)
+
+  platform                  ContestPlatform
+
+  activityDate              DateTime
+
+  submissionCount           Int   @default(0)
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@unique([userId,platform,activityDate])
+  @@index([userId,activityDate])
+  @@index([userId,platform])
+}
+
+model ContestParticipationActivity {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  platform ContestPlatform
+
+  contestName String
+  contestId   String
+
+  participatedAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, platform, contestId])
+
+  @@index([userId, participatedAt])
+  @@index([userId, platform])
 }
 
 enum ContestPlatform {
