@@ -67,3 +67,7 @@ export const getUserLinkedProfiles = async (userId: string) => {
     },
   });
 };
+
+export const getAllLinkedProfiles = async () => {
+  return await prisma.linkedPlatformAccount.findMany();
+};
