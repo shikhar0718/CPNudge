@@ -51,3 +51,44 @@ export const upsertManySubmissionActivity = async (
   }
   return results;
 };
+
+export const upsertManyActivities = async (
+  userId: string,
+  activities: Array<{
+    platform: ContestPlatform;
+    activityDate: Date;
+    submissionCount: number;
+  }>
+) => {
+  const params: UpsertSubmissionActivityParams[] = activities.map((activity) => ({
+    userId,
+    platform: activity.platform,
+    activityDate: activity.activityDate,
+    submissionCount: activity.submissionCount,
+  }));
+  return await upsertManySubmissionActivity(params);
+};
+
+export const updateLinkedProfileActivitySync = async (
+  userId: string,
+  platform: ContestPlatform,
+  data: {
+    lastSubmissionActivityDate?: Date | null;
+    lastSuccessfulSyncAt: Date;
+  }
+) => {
+  return await prisma.linkedPlatformAccount.update({
+    where: {
+      userId_platform: {
+        userId,
+        platform,
+      },
+    },
+    data: {
+      lastSuccessfulSyncAt: data.lastSuccessfulSyncAt,
+      ...(data.lastSubmissionActivityDate && {
+        lastSubmissionActivityDate: data.lastSubmissionActivityDate,
+      }),
+    },
+  });
+};
