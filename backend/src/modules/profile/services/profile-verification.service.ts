@@ -1,7 +1,7 @@
 import { ContestPlatform } from "../../../../generated/prisma/enums.js";
 import type { ProfileProvider } from "../providers/profile-provider.interface.js";
 import { CodeforcesProfileProvider } from "../providers/codeforces.provider.js";
-import { LeetcodeProfileProvider } from "../providers/leetcoder.provider.js";
+import { LeetcodeProfileProvider } from "../providers/leetcode.provider.js";
 import { CodechefProfileProvider } from "../providers/codechef.provider.js";
 import { AtcoderProfileProvider } from "../providers/atcoder.provider.js";
 import APIError from "../../../common/utils/api.errors.js";

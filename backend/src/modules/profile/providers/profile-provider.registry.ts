@@ -2,7 +2,7 @@ import { ContestPlatform } from "../../../../generated/prisma/enums.js";
 import type { ProfileProvider } from "./profile-provider.interface.js";
 import { CodeforcesProfileProvider } from "./codeforces.provider.js";
 import { CodechefProfileProvider } from "./codechef.provider.js";
-import { LeetcodeProfileProvider } from "./leetcoder.provider.js";
+import { LeetcodeProfileProvider } from "./leetcode.provider.js";
 import { AtcoderProfileProvider } from "./atcoder.provider.js";
 
 export class ProfileProviderRegistry {

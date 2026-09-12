@@ -1,6 +1,26 @@
 import { ContestPlatform } from "../../../../generated/prisma/enums.js";
-import type { NormalizedActivity, ProfileProvider } from "./profile-provider.interface.js";
+import type {
+  NormalizedActivity,
+  NormalizedContestParticipation,
+  ProfileProvider,
+} from "./profile-provider.interface.js";
 import { logger } from "../../../common/shared/logger.js";
+
+interface CodeforcesRatingChange {
+  contestId: number;
+  contestName: string;
+  handle: string;
+  rank: number;
+  ratingUpdateTimeSeconds: number;
+  oldRating: number;
+  newRating: number;
+}
+
+interface CodeforcesRatingResponse {
+  status: string;
+  result?: CodeforcesRatingChange[];
+  comment?: string;
+}
 
 export class CodeforcesProfileProvider implements ProfileProvider {
   supports(platform: ContestPlatform): boolean {
@@ -59,6 +79,42 @@ export class CodeforcesProfileProvider implements ProfileProvider {
       }));
     } catch (error) {
       logger.error(`Failed to fetch Codeforces activity for ${username}`, { error });
+      return [];
+    }
+  }
+
+  async fetchContestParticipation(username: string): Promise<NormalizedContestParticipation[]> {
+    try {
+      const response = await fetch(
+        `https://codeforces.com/api/user.rating?handle=${encodeURIComponent(username)}`,
+        {
+          signal: AbortSignal.timeout(5000),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Codeforces API returned ${response.status}`);
+      }
+
+      const data = (await response.json()) as CodeforcesRatingResponse;
+      if (data.status !== "OK" || !Array.isArray(data.result)) {
+        return [];
+      }
+
+      const participations: NormalizedContestParticipation[] = data.result.map((contest) => ({
+        platform: ContestPlatform.CODEFORCES,
+        contestId: String(contest.contestId),
+        contestName: contest.contestName,
+        participatedAt: new Date(contest.ratingUpdateTimeSeconds * 1000),
+      }));
+
+      logger.info(
+        `Fetched ${participations.length} contest participations from CODEFORCES for ${username}`
+      );
+
+      return participations;
+    } catch (error) {
+      logger.error(`Failed to fetch Codeforces contest participation for ${username}`, { error });
       return [];
     }
   }
