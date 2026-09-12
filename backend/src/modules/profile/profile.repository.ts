@@ -71,3 +71,15 @@ export const getUserLinkedProfiles = async (userId: string) => {
 export const getAllLinkedProfiles = async () => {
   return await prisma.linkedPlatformAccount.findMany();
 };
+
+export const getProfilesDueForSync = async (limit: number) => {
+  return await prisma.linkedPlatformAccount.findMany({
+    where: {
+      OR: [{ nextSyncAt: null }, { nextSyncAt: { lte: new Date() } }],
+    },
+    orderBy: {
+      nextSyncAt: "asc",
+    },
+    take: limit,
+  });
+};

@@ -6,6 +6,5 @@ const submissionRouter = Router();
 
 submissionRouter.get("/", authMiddleware, Controller.getSubmissionActivity);
 submissionRouter.post("/sync", authMiddleware, Controller.syncUserSubmissionActivity);
-submissionRouter.post("/sync/global", Controller.syncAllSubmissionActivity);
 
 export default submissionRouter;

@@ -1,9 +1,12 @@
 import { logger } from "../../../common/shared/logger.js";
 import type { SubmissionActivitySyncSummary } from "./submission-sync.types.js";
 import { ContestPlatform } from "../../../../generated/prisma/enums.js";
-import { getAllLinkedProfiles, getUserLinkedProfiles } from "../../profile/profile.repository.js";
+import { getProfilesDueForSync, getUserLinkedProfiles } from "../../profile/profile.repository.js";
 import { profileProviderRegistry } from "../../profile/providers/profile-provider.registry.js";
 import { upsertManyActivities, updateLinkedProfileActivitySync } from "./submission.repository.js";
+
+const BATCH_SIZE = 20;
+const SYNC_INTERVAL_HOURS = 6;
 
 export class SubmissionActivitySyncService {
   private async syncSingleProfile(account: {
@@ -45,9 +48,12 @@ export class SubmissionActivitySyncService {
         logger.info(`Stored ${activities.length} activity records for user ${account.userId}`);
       }
 
+      const nextSyncAt = new Date(Date.now() + SYNC_INTERVAL_HOURS * 60 * 60 * 1000);
+
       await updateLinkedProfileActivitySync(account.userId, account.platform, {
         lastSubmissionActivityDate: latestActivityDate,
         lastSuccessfulSyncAt: new Date(),
+        nextSyncAt,
       });
 
       return {
@@ -66,11 +72,20 @@ export class SubmissionActivitySyncService {
     linkedProfiles: { userId: string; platform: ContestPlatform; username: string }[]
   ): Promise<SubmissionActivitySyncSummary> {
     const startedAt = new Date();
-    logger.info("Starting activity synchronization...");
-
-    const results = await Promise.allSettled(
-      linkedProfiles.map((account) => this.syncSingleProfile(account))
+    logger.info(
+      `Starting submission activity synchronization for ${linkedProfiles.length} due profiles...`
     );
+
+    const results: PromiseSettledResult<{ submissionsFetched: number; recordsStored: number }>[] =
+      [];
+
+    for (let i = 0; i < linkedProfiles.length; i += BATCH_SIZE) {
+      const batch = linkedProfiles.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.allSettled(
+        batch.map((account) => this.syncSingleProfile(account))
+      );
+      results.push(...batchResults);
+    }
 
     let totalSubmissionFetched = 0;
     for (const result of results) {
@@ -83,19 +98,20 @@ export class SubmissionActivitySyncService {
     const durationMs = completedAt.getTime() - startedAt.getTime();
 
     logger.info(
-      `Activity synchronization completed in ${durationMs}ms. Total submissions fetched: ${totalSubmissionFetched}`
+      `Activity synchronization completed in ${durationMs}ms. Processed ${linkedProfiles.length} profiles, fetched ${totalSubmissionFetched} submissions.`
     );
 
     return {
       startedAt,
       completedAt,
       durationMs,
+      profilesProcessed: linkedProfiles.length,
       totalSubmissionFetched,
     };
   }
 
-  async syncSubmissionActivity(): Promise<SubmissionActivitySyncSummary> {
-    const linkedProfiles = await getAllLinkedProfiles();
+  async syncDueSubmissionActivity(limit: number = 500): Promise<SubmissionActivitySyncSummary> {
+    const linkedProfiles = await getProfilesDueForSync(limit);
     return this.syncProfiles(linkedProfiles);
   }
 

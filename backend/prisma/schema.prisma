@@ -131,11 +131,13 @@ model LinkedPlatformAccount {
 
     // Operational Metadata
   lastSuccessfulSyncAt DateTime?
+  nextSyncAt           DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, platform])
+  @@index([nextSyncAt])
 }
 
 model SubmissionActivity{

@@ -41,12 +41,13 @@ export const syncUserSubmissionActivity = async (
 };
 
 export const syncAllSubmissionActivity = async (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const summary = await submissionService.syncSubmissionActivity();
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 500;
+    const summary = await submissionService.syncDueSubmissionActivity(limit);
     return APIResponse.ok(res, "Global submission activity synchronization completed.", summary);
   } catch (error) {
     next(error);

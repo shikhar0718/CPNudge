@@ -75,6 +75,7 @@ export const updateLinkedProfileActivitySync = async (
   data: {
     lastSubmissionActivityDate?: Date | null;
     lastSuccessfulSyncAt: Date;
+    nextSyncAt?: Date | null;
   }
 ) => {
   return await prisma.linkedPlatformAccount.update({
@@ -86,8 +87,11 @@ export const updateLinkedProfileActivitySync = async (
     },
     data: {
       lastSuccessfulSyncAt: data.lastSuccessfulSyncAt,
-      ...(data.lastSubmissionActivityDate && {
+      ...(data.lastSubmissionActivityDate !== undefined && {
         lastSubmissionActivityDate: data.lastSubmissionActivityDate,
+      }),
+      ...(data.nextSyncAt !== undefined && {
+        nextSyncAt: data.nextSyncAt,
       }),
     },
   });

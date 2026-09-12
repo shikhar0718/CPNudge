@@ -10,8 +10,8 @@ export class SubmissionService {
     return getSubmissionActivityByUser(userId, platform);
   }
 
-  async syncSubmissionActivity(): Promise<SubmissionActivitySyncSummary> {
-    return this.submissionActivitySyncService.syncSubmissionActivity();
+  async syncDueSubmissionActivity(limit: number = 500): Promise<SubmissionActivitySyncSummary> {
+    return this.submissionActivitySyncService.syncDueSubmissionActivity(limit);
   }
 
   async syncUserSubmissionActivity(userId: string): Promise<SubmissionActivitySyncSummary> {
