@@ -1,5 +1,5 @@
 import { logger } from "../../../common/shared/logger.js";
-import type { SubmissionActivitySyncSummary } from "./submission-sync.types.js";
+import type { SubmissionActivitySyncSummary } from "./submission.types.js";
 import { ContestPlatform } from "../../../../generated/prisma/enums.js";
 import { getProfilesDueForSync, getUserLinkedProfiles } from "../../profile/profile.repository.js";
 import { profileProviderRegistry } from "../../profile/providers/profile-provider.registry.js";

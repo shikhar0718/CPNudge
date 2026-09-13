@@ -1,12 +1,6 @@
 import { prisma } from "../../../common/database/index.js";
 import type { ContestPlatform } from "../../../../generated/prisma/client.js";
-
-export interface UpsertSubmissionActivityParams {
-  userId: string;
-  platform: ContestPlatform;
-  activityDate: Date;
-  submissionCount: number;
-}
+import type { UpsertSubmissionActivityParams } from "./submission.types.js";
 
 export const upsertSubmissionActivity = async (data: UpsertSubmissionActivityParams) => {
   return await prisma.submissionActivity.upsert({

@@ -1,7 +1,7 @@
 import { ContestPlatform } from "../../../../generated/prisma/enums.js";
 import { SubmissionActivitySyncService } from "./submission-sync.service.js";
 import { getSubmissionActivityByUser } from "./submission.repository.js";
-import type { SubmissionActivitySyncSummary } from "./submission-sync.types.js";
+import type { SubmissionActivitySyncSummary } from "./submission.types.js";
 
 export class SubmissionService {
   private readonly submissionActivitySyncService = new SubmissionActivitySyncService();
