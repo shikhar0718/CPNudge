@@ -112,6 +112,82 @@ export const findParticipationsByUserId = async (
 // Aliases matching conventions in submission activity and general repository access
 export const getContestActivityByUser = findParticipationsByUserId;
 export const findByUserId = findParticipationsByUserId;
+export const upsertManyParticipations = upsertManyContestActivity;
+
+/**
+ * Retrieve linked platform accounts for contest synchronization.
+ */
+export const getLinkedAccountsForContestSync = async (userId?: string) => {
+  return prisma.linkedPlatformAccount.findMany({
+    where: {
+      ...(userId && { userId }),
+    },
+    select: {
+      id: true,
+      userId: true,
+      platform: true,
+      username: true,
+      lastContestParticipationDate: true,
+    },
+  });
+};
+
+/**
+ * Update the last contest participation date and last sync timestamp for a linked account.
+ */
+export const updateLastContestAt = async (
+  userId: string,
+  platform: ContestPlatform,
+  lastContestAt: Date
+) => {
+  return prisma.linkedPlatformAccount.update({
+    where: {
+      userId_platform: {
+        userId,
+        platform,
+      },
+    },
+    data: {
+      lastContestParticipationDate: lastContestAt,
+      lastSuccessfulSyncAt: new Date(),
+    },
+  });
+};
+
+/**
+ * Update sync status and metadata for a linked platform account.
+ */
+export const updateLinkedProfileContestSync = async (
+  userId: string,
+  platform: ContestPlatform,
+  data: {
+    lastContestParticipationDate?: Date | null;
+    lastContestAt?: Date | null;
+    lastSuccessfulSyncAt?: Date;
+    nextSyncAt?: Date | null;
+  }
+) => {
+  const lastDate = data.lastContestParticipationDate ?? data.lastContestAt;
+  return prisma.linkedPlatformAccount.update({
+    where: {
+      userId_platform: {
+        userId,
+        platform,
+      },
+    },
+    data: {
+      ...(data.lastSuccessfulSyncAt !== undefined && {
+        lastSuccessfulSyncAt: data.lastSuccessfulSyncAt,
+      }),
+      ...(lastDate !== undefined && {
+        lastContestParticipationDate: lastDate,
+      }),
+      ...(data.nextSyncAt !== undefined && {
+        nextSyncAt: data.nextSyncAt,
+      }),
+    },
+  });
+};
 
 /**
  * Find user by ID.

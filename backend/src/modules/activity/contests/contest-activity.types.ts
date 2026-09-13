@@ -11,3 +11,21 @@ export interface UpsertContestActivityParams {
   contestName: string;
   participatedAt: Date;
 }
+
+export interface ContestActivitySyncSummary {
+  processedAccounts: number;
+  successfulAccounts: number;
+  failedAccounts: number;
+  totalParticipationsStored: number;
+  startedAt?: Date;
+  completedAt?: Date;
+  durationMs?: number;
+}
+
+export interface LinkedAccountForSync {
+  id: string;
+  userId: string;
+  platform: ContestPlatform;
+  username: string;
+  lastContestParticipationDate?: Date | null;
+}
