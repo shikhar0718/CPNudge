@@ -7,6 +7,7 @@ import healthRouter from "./modules/health/health.route.js";
 import { authRouter } from "./modules/auth/index.js";
 import { contestRouter } from "./modules/contest/index.js";
 import { profileRouter } from "./modules/profile/index.js";
+import activityRouter from "./modules/activity/index.js";
 import { notFoundMiddleware, errorHandlerMiddleware } from "./common/middleware/index.js";
 
 const app = express();
@@ -34,6 +35,7 @@ app.use("/health", healthRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/contests", contestRouter);
 app.use("/api/v1/profiles", profileRouter);
+app.use("/api/v1/activity", activityRouter);
 
 app.get("/", (req: express.Request, res: express.Response) => {
   res.send("Backend is running");
