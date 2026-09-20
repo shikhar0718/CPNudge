@@ -15,3 +15,18 @@ export interface CountNotificationsOptions {
   platform?: ContestPlatform;
   notificationType?: NotificationType;
 }
+
+export interface NotificationDeliveryRequest {
+  userId: string;
+  platform: ContestPlatform;
+  notificationType: NotificationType;
+  lastActivityAt: Date;
+  inactiveDays: number;
+}
+
+export interface NotificationProcessingResult {
+  requests: NotificationDeliveryRequest[];
+  processedCandidates: number;
+  generatedRequests: number;
+  skippedSameCycle: number;
+}
