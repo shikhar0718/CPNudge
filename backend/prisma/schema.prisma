@@ -33,6 +33,7 @@ model User {
   linkedPlatformAccounts                   LinkedPlatformAccount[]
   submissionActivity                       SubmissionActivity[]
   contestParticipationActivity             ContestParticipationActivity[]
+  notificationHistory                      NotificationHistory[]
 }
 
 model Session {
@@ -180,6 +181,23 @@ model ContestParticipationActivity {
   @@index([userId, platform])
 }
 
+model NotificationHistory{
+  id String @id @default(uuid()) @db.Uuid
+  userId  String @db.Uuid
+  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  platform ContestPlatform
+
+  notificationType NotificationType
+  sentAt DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([notificationType])
+  @@index([sentAt])
+  @@index([userId,platform])
+  }
+
+
 enum ContestPlatform {
   LEETCODE
   CODEFORCES
@@ -193,3 +211,13 @@ enum ContestStatus {
   FINISHED
   CANCELLED
 }
+
+enum NotificationType {
+  SUBMISSION_3_DAYS
+  SUBMISSION_7_DAYS
+  SUBMISSION_30_DAYS
+
+  CONTEST_14_DAYS
+  CONTEST_30_DAYS
+}
+
