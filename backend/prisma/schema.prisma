@@ -34,6 +34,18 @@ model User {
   submissionActivity                       SubmissionActivity[]
   contestParticipationActivity             ContestParticipationActivity[]
   notificationHistory                      NotificationHistory[]
+  notificationPreference       NotificationPreference?
+}
+
+model NotificationPreference {
+  id                    String            @id @default(uuid()) @db.Uuid
+  userId                String            @unique @db.Uuid
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationsEnabled  Boolean           @default(true)
+  enabledPlatforms      ContestPlatform[] @default([LEETCODE, CODEFORCES, CODECHEF, ATCODER])
+  reminderBeforeMinutes Int               @default(60)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
 }
 
 model Session {
@@ -115,6 +127,8 @@ model Contest {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
+  notificationHistory NotificationHistory[]
+
   @@unique([platform, contestId])
   @@index([status, startTime])
 }
@@ -185,16 +199,23 @@ model NotificationHistory{
   id String @id @default(uuid()) @db.Uuid
   userId  String @db.Uuid
   user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+  contestId String? @db.Uuid
+  contest Contest? @relation(fields: [contestId], references: [id], onDelete: Cascade)
   platform ContestPlatform
 
   notificationType NotificationType
-  sentAt DateTime @default(now())
+  reminderBeforeMinutes Int?
+  deliveryStatus NotificationDeliveryStatus @default(SENT)
+  claimedAt DateTime?
+  sentAt DateTime? @default(now())
   createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([notificationType])
   @@index([sentAt])
   @@index([userId,platform])
+  @@index([contestId])
+  @@unique([userId, contestId, notificationType, reminderBeforeMinutes])
   }
 
 
@@ -219,5 +240,10 @@ enum NotificationType {
 
   CONTEST_14_DAYS
   CONTEST_30_DAYS
+  CONTEST_REMINDER
 }
 
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT
+}

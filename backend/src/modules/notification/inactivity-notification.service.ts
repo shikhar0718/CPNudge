@@ -36,6 +36,7 @@ export class InactivityNotificationService {
       // they are eligible for a new notification cycle.
       // If no new activity occurred since the notification, skip to prevent duplicate spam.
       return (
+        latestNotification.sentAt !== null &&
         new Date(candidate.lastActivity).getTime() > new Date(latestNotification.sentAt).getTime()
       );
     } catch (error) {
